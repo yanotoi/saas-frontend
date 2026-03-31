@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { loginUser, registerUser } from "../api";
+import { loginUser, registerUser } from "../api.js"; // <- agregá .js
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState("");
