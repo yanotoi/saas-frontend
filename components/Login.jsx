@@ -8,6 +8,7 @@ export default function Login({ onLogin }) {
   const login = async () => {
     try {
       const data = await loginUser(email, password);
+      if (!data.token) return alert("Credenciales incorrectas");
       localStorage.setItem("user", JSON.stringify(data));
       onLogin(data);
     } catch {
@@ -16,8 +17,15 @@ export default function Login({ onLogin }) {
   };
 
   const register = async () => {
-    await registerUser(email, password);
-    alert("Usuario creado");
+    try {
+      const data = await registerUser(email, password);
+      if (!data.token) return alert("Error al registrarse");
+      localStorage.setItem("user", JSON.stringify(data));
+      onLogin(data);
+      alert("Usuario creado y logueado");
+    } catch {
+      alert("Error al registrarse");
+    }
   };
 
   return (

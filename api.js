@@ -1,17 +1,20 @@
 export const API = "https://saas-backend-production-5adc.up.railway.app";
 
 export const loginUser = (email, password) =>
-  fetch(`${API}/login`, {
+  fetch(`${API}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   }).then(res => res.json());
 
 export const registerUser = (email, password) =>
-  fetch(`${API}/register`, {
+  fetch(`${API}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
+  }).then(res => {
+    if (!res.ok) throw new Error("Error registrando usuario");
+    return res.json();
   });
 
 export const fetchProducts = (userId) =>
