@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import Clients from "./components/Clients";
-import Products from "./components/Products";
-import Orders from "./components/Orders";
+import Clients from "../components/Clients";
+import Products from "../components/Products";
+import Orders from "../components/Orders";
 
 const API = "https://saas-backend-production-5adc.up.railway.app";
 
