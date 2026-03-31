@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { loginUser, registerUser } from "../src/api.js"; // <- agregá .js
+import { loginUser, registerUser } from "../src/api.js";
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -31,8 +31,17 @@ export default function Login({ onLogin }) {
   return (
     <div style={{ padding: 20 }}>
       <h2>Login</h2>
-      <input placeholder="Email" onChange={e => setEmail(e.target.value)} />
-      <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
+      <input
+        placeholder="Email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+      />
       <button onClick={login}>Ingresar</button>
       <button onClick={register}>Registrarse</button>
     </div>

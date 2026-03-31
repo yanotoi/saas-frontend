@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import Clients from "../components/Clients";
-import Login from "../components/Login"; // <- esto es lo que falta
+import Login from "../components/Login";
 import Products from "../components/Products";
 import Orders from "../components/Orders";
 import { API } from "./api";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [clients, setClients] = useState([]);
@@ -24,11 +22,19 @@ function App() {
   };
 
   const loadProducts = () =>
-    fetch(`${API}/products?user_id=${user.id}`).then(r => r.json()).then(setProducts);
+    fetch(`${API}/products?user_id=${user.id}`)
+      .then(r => r.json())
+      .then(setProducts);
+
   const loadOrders = () =>
-    fetch(`${API}/orders?user_id=${user.id}`).then(r => r.json()).then(setOrders);
+    fetch(`${API}/orders?user_id=${user.id}`)
+      .then(r => r.json())
+      .then(setOrders);
+
   const loadClients = () =>
-    fetch(`${API}/clients?user_id=${user.id}`).then(r => r.json()).then(setClients);
+    fetch(`${API}/clients?user_id=${user.id}`)
+      .then(r => r.json())
+      .then(setClients);
 
   useEffect(() => {
     if (user) {
@@ -44,9 +50,27 @@ function App() {
     <div style={{ padding: 20, maxWidth: 800, margin: "auto" }}>
       <button onClick={logout}>Cerrar sesión</button>
       <h1>Sistema de Pedidos y Stock</h1>
-      <Products products={products} setProducts={setProducts} user={user} loadProducts={loadProducts} />
-      <Clients clients={clients} setClients={setClients} user={user} loadClients={loadClients} />
-      <Orders orders={orders} setOrders={setOrders} products={products} user={user} loadOrders={loadOrders} loadProducts={loadProducts} clients={clients} />
+      <Products
+        products={products}
+        setProducts={setProducts}
+        user={user}
+        loadProducts={loadProducts}
+      />
+      <Clients
+        clients={clients}
+        setClients={setClients}
+        user={user}
+        loadClients={loadClients}
+      />
+      <Orders
+        orders={orders}
+        setOrders={setOrders}
+        products={products}
+        user={user}
+        loadOrders={loadOrders}
+        loadProducts={loadProducts}
+        clients={clients}
+      />
     </div>
   );
 }
