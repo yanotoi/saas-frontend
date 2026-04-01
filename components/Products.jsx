@@ -1,16 +1,30 @@
+import React from "react";
+
 export default function Products({
-  products,
-  selectedProducts,
-  toggleProduct,
-  name,
-  setName,
-  price,
-  setPrice,
-  stock,
-  setStock,
-  addProduct
+  products = [],
+  selectedProducts = [],
+  toggleProduct = () => {},
+  name = "",
+  setName = () => {},
+  price = "",
+  setPrice = () => {},
+  stock = "",
+  setStock = () => {},
+  addProduct = () => {}
 }) {
   const safeProducts = Array.isArray(products) ? products : [];
+
+  const handleToggle = (product) => {
+    if (typeof toggleProduct === "function") {
+      toggleProduct(product);
+    }
+  };
+
+  const handleAddProduct = () => {
+    if (typeof addProduct === "function") {
+      addProduct();
+    }
+  };
 
   return (
     <div>
@@ -18,21 +32,23 @@ export default function Products({
 
       <input
         value={name || ""}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => typeof setName === "function" && setName(e.target.value)}
         placeholder="Nombre"
       />
       <input
         value={price || ""}
-        onChange={(e) => setPrice(e.target.value)}
+        onChange={(e) => typeof setPrice === "function" && setPrice(e.target.value)}
         placeholder="Precio"
+        type="number"
       />
       <input
         value={stock || ""}
-        onChange={(e) => setStock(e.target.value)}
+        onChange={(e) => typeof setStock === "function" && setStock(e.target.value)}
         placeholder="Stock"
+        type="number"
       />
 
-      <button onClick={addProduct}>Agregar</button>
+      <button onClick={handleAddProduct}>Agregar</button>
 
       <ul>
         {safeProducts.map((p) => (
@@ -40,7 +56,8 @@ export default function Products({
             <label>
               <input
                 type="checkbox"
-                onChange={() => toggleProduct && toggleProduct(p)}
+                checked={selectedProducts.includes(p.id)}
+                onChange={() => handleToggle(p)}
               />
               {p.name} - ${p.price} - Stock: {p.stock}
               {p.stock < 5 && (
