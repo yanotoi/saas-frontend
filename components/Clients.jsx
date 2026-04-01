@@ -22,7 +22,9 @@ export default function Clients({ clients = [], setClients, user }) {
         body: JSON.stringify({ name: newClient, user_id: user.id }),
       });
       const created = await res.json();
-      setClients([...clients, created]);
+
+      // actualizar de forma funcional para evitar cierres de estado
+      setClients(prev => [...prev, created]);
       setNewClient("");
     } catch (err) {
       console.error(err);
@@ -45,7 +47,9 @@ export default function Clients({ clients = [], setClients, user }) {
         body: JSON.stringify({ name: editingName }),
       });
 
-      setClients(clients.map(c => (c.id === id ? { ...c, name: editingName } : c)));
+      setClients(prev =>
+        prev.map(c => (c.id === id ? { ...c, name: editingName } : c))
+      );
       setEditingId(null);
       setEditingName("");
     } catch (err) {
@@ -63,7 +67,7 @@ export default function Clients({ clients = [], setClients, user }) {
         headers: getAuthHeaders(),
       });
 
-      setClients(clients.filter(c => c.id !== id));
+      setClients(prev => prev.filter(c => c.id !== id));
     } catch (err) {
       console.error(err);
       alert("Error al eliminar cliente");

@@ -35,7 +35,9 @@ function App() {
 
   const loadProducts = useCallback(() => {
     if (!user) return;
-    fetchProducts(user.id).then((data) => setProducts(Array.isArray(data) ? data : []));
+    fetchProducts(user.id).then((data) =>
+      setProducts(Array.isArray(data) ? data.map(p => ({...p, price: parseFloat(p.price), stock: parseInt(p.stock)})) : [])
+    );
   }, [user]);
 
   const loadOrders = useCallback(() => {
@@ -58,11 +60,11 @@ function App() {
 
   // FUNCIONES PRODUCTS
   const toggleProduct = (product) => {
-    setSelectedProducts((prev) =>
-      prev.includes(product.id)
-        ? prev.filter((id) => id !== product.id)
-        : [...prev, product.id]
-    );
+    setSelectedProducts((prev) => {
+      const exists = prev.find(p => p.id === product.id);
+      if (exists) return prev.filter(p => p.id !== product.id);
+      return [...prev, {...product, quantity: 1}]; // inicializamos quantity
+    });
   };
 
   const addProduct = () => {

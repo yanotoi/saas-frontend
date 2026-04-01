@@ -44,9 +44,9 @@ export default function Orders({
           {p.name}
           <input
             type="number"
-            value={p.quantity || 0}
-            onChange={(e) => updateQuantity(p.id, parseInt(e.target.value, 10) || 0)}
-            min={0}
+            value={p.quantity || 1}
+            onChange={(e) => updateQuantity(p.id, parseInt(e.target.value, 10) || 1)}
+            min={1}
           />
         </div>
       ))}

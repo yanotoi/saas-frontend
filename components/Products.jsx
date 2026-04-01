@@ -43,7 +43,7 @@ export default function Products({
             <label>
               <input
                 type="checkbox"
-                checked={selectedProducts.includes(p.id)}
+                checked={selectedProducts.some(sp => sp.id === p.id)}
                 onChange={() => toggleProduct(p)}
               />
               {p.name} - ${p.price} - Stock: {p.stock}
