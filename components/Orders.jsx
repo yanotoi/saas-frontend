@@ -22,40 +22,9 @@ export default function Orders({
     0
   );
 
-  const filteredOrders = safeOrders.filter(o =>
+  const filteredOrders = safeOrders.filter((o) =>
     (o.client || "").toLowerCase().includes((filter || "").toLowerCase())
   );
-
-  const handleUpdateQuantity = (id, value) => {
-    if (typeof updateQuantity === "function") {
-      const qty = parseInt(value, 10) || 0;
-      updateQuantity(id, qty);
-    }
-  };
-
-  const handleDeliverOrder = (id) => {
-    if (typeof deliverOrder === "function") {
-      deliverOrder(id);
-    }
-  };
-
-  const handleCreateOrder = () => {
-    if (typeof createOrder === "function") {
-      createOrder();
-    }
-  };
-
-  const handleSetClientName = (value) => {
-    if (typeof setClientName === "function") {
-      setClientName(value);
-    }
-  };
-
-  const handleSetFilter = (value) => {
-    if (typeof setFilter === "function") {
-      setFilter(value);
-    }
-  };
 
   return (
     <div>
@@ -63,52 +32,48 @@ export default function Orders({
 
       <input
         list="clients"
-        value={clientName || ""}
-        onChange={e => handleSetClientName(e.target.value)}
+        value={clientName}
+        onChange={(e) => setClientName(e.target.value)}
         placeholder="Cliente"
       />
-
       <datalist id="clients">
-        {safeClients.map(c => (
+        {safeClients.map((c) => (
           <option key={c.id} value={c.name} />
         ))}
       </datalist>
 
-      {safeProducts.map(p => (
+      {safeProducts.map((p) => (
         <div key={p.id}>
           {p.name}
           <input
             type="number"
             value={p.quantity || 0}
-            onChange={e => handleUpdateQuantity(p.id, e.target.value)}
+            onChange={(e) => updateQuantity(p.id, parseInt(e.target.value) || 0)}
             min={0}
           />
         </div>
       ))}
 
       <h3>Total: ${total}</h3>
-      <button onClick={handleCreateOrder}>Crear Pedido</button>
+      <button onClick={createOrder}>Crear Pedido</button>
 
       <hr />
 
       <h2>🚚 Pedidos</h2>
-
       <input
         placeholder="Buscar cliente..."
-        value={filter || ""}
-        onChange={e => handleSetFilter(e.target.value)}
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
       />
 
       <ul>
-        {filteredOrders.map(o => (
+        {filteredOrders.map((o) => (
           <li key={o.id}>
             {o.client} - ${o.total} -{" "}
             {o.status === "pending" ? "Pendiente" : "Entregado"}
 
             {o.status === "pending" && (
-              <button onClick={() => handleDeliverOrder(o.id)}>
-                Entregar
-              </button>
+              <button onClick={() => deliverOrder(o.id)}>Entregar</button>
             )}
           </li>
         ))}

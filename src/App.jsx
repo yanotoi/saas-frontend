@@ -7,8 +7,20 @@ import { fetchProducts, fetchOrders, fetchClients } from "./api";
 
 function App() {
   const [user, setUser] = useState(null);
+
+  // Productos
   const [products, setProducts] = useState([]);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const [stock, setStock] = useState("");
+
+  // Pedidos
   const [orders, setOrders] = useState([]);
+  const [clientName, setClientName] = useState("");
+  const [filter, setFilter] = useState("");
+
+  // Clientes
   const [clients, setClients] = useState([]);
 
   useEffect(() => {
@@ -23,23 +35,17 @@ function App() {
 
   const loadProducts = useCallback(() => {
     if (!user) return;
-    fetchProducts(user.id).then(data =>
-      setProducts(Array.isArray(data) ? data : [])
-    );
+    fetchProducts(user.id).then((data) => setProducts(Array.isArray(data) ? data : []));
   }, [user]);
 
   const loadOrders = useCallback(() => {
     if (!user) return;
-    fetchOrders(user.id).then(data =>
-      setOrders(Array.isArray(data) ? data : [])
-    );
+    fetchOrders(user.id).then((data) => setOrders(Array.isArray(data) ? data : []));
   }, [user]);
 
   const loadClients = useCallback(() => {
     if (!user) return;
-    fetchClients(user.id).then(data =>
-      setClients(Array.isArray(data) ? data : [])
-    );
+    fetchClients(user.id).then((data) => setClients(Array.isArray(data) ? data : []));
   }, [user]);
 
   useEffect(() => {
@@ -50,6 +56,55 @@ function App() {
     }
   }, [user, loadProducts, loadOrders, loadClients]);
 
+  // FUNCIONES PRODUCTS
+  const toggleProduct = (product) => {
+    setSelectedProducts((prev) =>
+      prev.includes(product.id)
+        ? prev.filter((id) => id !== product.id)
+        : [...prev, product.id]
+    );
+  };
+
+  const addProduct = () => {
+    if (!name || !price || !stock) return;
+    const newProduct = {
+      id: products.length + 1,
+      name,
+      price: parseFloat(price),
+      stock: parseInt(stock),
+    };
+    setProducts((prev) => [...prev, newProduct]);
+    setName("");
+    setPrice("");
+    setStock("");
+  };
+
+  // FUNCIONES ORDERS
+  const updateQuantity = (id, quantity) => {
+    setSelectedProducts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, quantity } : p))
+    );
+  };
+
+  const createOrder = () => {
+    if (!clientName || selectedProducts.length === 0) return;
+    const total = selectedProducts.reduce((acc, p) => acc + p.price * p.quantity, 0);
+    const newOrder = {
+      id: orders.length + 1,
+      client: clientName,
+      products: [...selectedProducts],
+      total,
+      status: "pending",
+    };
+    setOrders((prev) => [...prev, newOrder]);
+    setSelectedProducts([]);
+    setClientName("");
+  };
+
+  const deliverOrder = (id) => {
+    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: "delivered" } : o)));
+  };
+
   if (!user) return <Login onLogin={setUser} />;
 
   return (
@@ -57,17 +112,33 @@ function App() {
       <button onClick={logout}>Cerrar sesión</button>
       <h1>Sistema de Pedidos y Stock</h1>
 
-      <Products products={products} />
-
-      <Clients
-        clients={clients}
-        user={user}
-        loadClients={loadClients}
+      <Products
+        products={products}
+        selectedProducts={selectedProducts}
+        toggleProduct={toggleProduct}
+        name={name}
+        setName={setName}
+        price={price}
+        setPrice={setPrice}
+        stock={stock}
+        setStock={setStock}
+        addProduct={addProduct}
       />
+
+      <Clients clients={clients} user={user} loadClients={loadClients} />
 
       <Orders
         orders={orders}
         clients={clients}
+        selectedProducts={selectedProducts}
+        toggleProduct={toggleProduct}
+        updateQuantity={updateQuantity}
+        clientName={clientName}
+        setClientName={setClientName}
+        createOrder={createOrder}
+        deliverOrder={deliverOrder}
+        filter={filter}
+        setFilter={setFilter}
       />
     </div>
   );
