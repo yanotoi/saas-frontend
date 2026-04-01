@@ -1,25 +1,61 @@
+import React from "react";
+
 export default function Orders({
-  orders,
-  clients,
-  selectedProducts,
-  toggleProduct,
-  updateQuantity,
-  clientName,
-  setClientName,
-  createOrder,
-  deliverOrder,
-  filter,
-  setFilter
+  orders = [],
+  clients = [],
+  selectedProducts = [],
+  toggleProduct = () => {},
+  updateQuantity = () => {},
+  clientName = "",
+  setClientName = () => {},
+  createOrder = () => {},
+  deliverOrder = () => {},
+  filter = "",
+  setFilter = () => {}
 }) {
   const safeProducts = Array.isArray(selectedProducts) ? selectedProducts : [];
   const safeOrders = Array.isArray(orders) ? orders : [];
   const safeClients = Array.isArray(clients) ? clients : [];
 
-  const total = safeProducts.reduce((acc, p) => acc + p.price * p.quantity, 0);
+  const total = safeProducts.reduce(
+    (acc, p) => acc + (p.price || 0) * (p.quantity || 0),
+    0
+  );
 
   const filteredOrders = safeOrders.filter(o =>
     (o.client || "").toLowerCase().includes((filter || "").toLowerCase())
   );
+
+  const handleUpdateQuantity = (id, value) => {
+    if (typeof updateQuantity === "function") {
+      const qty = parseInt(value, 10) || 0;
+      updateQuantity(id, qty);
+    }
+  };
+
+  const handleDeliverOrder = (id) => {
+    if (typeof deliverOrder === "function") {
+      deliverOrder(id);
+    }
+  };
+
+  const handleCreateOrder = () => {
+    if (typeof createOrder === "function") {
+      createOrder();
+    }
+  };
+
+  const handleSetClientName = (value) => {
+    if (typeof setClientName === "function") {
+      setClientName(value);
+    }
+  };
+
+  const handleSetFilter = (value) => {
+    if (typeof setFilter === "function") {
+      setFilter(value);
+    }
+  };
 
   return (
     <div>
@@ -28,7 +64,7 @@ export default function Orders({
       <input
         list="clients"
         value={clientName || ""}
-        onChange={e => setClientName(e.target.value)}
+        onChange={e => handleSetClientName(e.target.value)}
         placeholder="Cliente"
       />
 
@@ -44,13 +80,14 @@ export default function Orders({
           <input
             type="number"
             value={p.quantity || 0}
-            onChange={e => updateQuantity(p.id, e.target.value)}
+            onChange={e => handleUpdateQuantity(p.id, e.target.value)}
+            min={0}
           />
         </div>
       ))}
 
       <h3>Total: ${total}</h3>
-      <button onClick={createOrder}>Crear Pedido</button>
+      <button onClick={handleCreateOrder}>Crear Pedido</button>
 
       <hr />
 
@@ -59,7 +96,7 @@ export default function Orders({
       <input
         placeholder="Buscar cliente..."
         value={filter || ""}
-        onChange={e => setFilter(e.target.value)}
+        onChange={e => handleSetFilter(e.target.value)}
       />
 
       <ul>
@@ -69,7 +106,7 @@ export default function Orders({
             {o.status === "pending" ? "Pendiente" : "Entregado"}
 
             {o.status === "pending" && (
-              <button onClick={() => deliverOrder(o.id)}>
+              <button onClick={() => handleDeliverOrder(o.id)}>
                 Entregar
               </button>
             )}
