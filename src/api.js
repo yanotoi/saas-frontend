@@ -1,4 +1,4 @@
-export const API = "https://saas-backend-production-5adc.up.railway.app";
+export const API = "web-production-6e9f.up.railway.app";
 
 export const loginUser = (email, password) =>
   fetch(`${API}/auth/login`, {
