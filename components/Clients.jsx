@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const API = "web-production-6e9f.up.railway.app";
+const API = "https://web-production-6e9f.up.railway.app/";
 
 export default function Clients({ clients, setClients, user, loadClients }) {
   const [newClient, setNewClient] = useState("");
