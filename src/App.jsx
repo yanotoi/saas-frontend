@@ -3,7 +3,7 @@ import Clients from "../components/Clients";
 import Login from "../components/Login";
 import Products from "../components/Products";
 import Orders from "../components/Orders";
-import { API } from "./api";
+import { fetchProducts, fetchOrders, fetchClients } from "./api";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -11,9 +11,6 @@ function App() {
   const [orders, setOrders] = useState([]);
   const [clients, setClients] = useState([]);
 
-  // ==========================
-  // 🔐 Recuperar usuario
-  // ==========================
   useEffect(() => {
     const saved = localStorage.getItem("user");
     if (saved) setUser(JSON.parse(saved));
@@ -24,36 +21,27 @@ function App() {
     setUser(null);
   };
 
-  // ==========================
-  // 📦 LOADERS (ESTABLES)
-  // ==========================
   const loadProducts = useCallback(() => {
     if (!user) return;
-    fetch(`${API}/products?user_id=${user.id}`)
-      .then(r => r.json())
-      .then(data => setProducts(Array.isArray(data) ? data : []))
-      .catch(() => setProducts([]));
+    fetchProducts(user.id).then(data =>
+      setProducts(Array.isArray(data) ? data : [])
+    );
   }, [user]);
 
   const loadOrders = useCallback(() => {
     if (!user) return;
-    fetch(`${API}/orders?user_id=${user.id}`)
-      .then(r => r.json())
-      .then(data => setOrders(Array.isArray(data) ? data : []))
-      .catch(() => setOrders([]));
+    fetchOrders(user.id).then(data =>
+      setOrders(Array.isArray(data) ? data : [])
+    );
   }, [user]);
 
   const loadClients = useCallback(() => {
     if (!user) return;
-    fetch(`${API}/clients?user_id=${user.id}`)
-      .then(r => r.json())
-      .then(data => setClients(Array.isArray(data) ? data : []))
-      .catch(() => setClients([]));
+    fetchClients(user.id).then(data =>
+      setClients(Array.isArray(data) ? data : [])
+    );
   }, [user]);
 
-  // ==========================
-  // 🔄 Cargar datos una vez
-  // ==========================
   useEffect(() => {
     if (user) {
       loadProducts();
@@ -62,41 +50,23 @@ function App() {
     }
   }, [user, loadProducts, loadOrders, loadClients]);
 
-  // ==========================
-  // 🔐 Login
-  // ==========================
   if (!user) return <Login onLogin={setUser} />;
 
-  // ==========================
-  // UI
-  // ==========================
   return (
     <div style={{ padding: 20, maxWidth: 800, margin: "auto" }}>
       <button onClick={logout}>Cerrar sesión</button>
-
       <h1>Sistema de Pedidos y Stock</h1>
 
-      <Products
-        products={products}
-        setProducts={setProducts}
-        user={user}
-        loadProducts={loadProducts}
-      />
+      <Products products={products} />
 
       <Clients
         clients={clients}
-        setClients={setClients}
         user={user}
         loadClients={loadClients}
       />
 
       <Orders
         orders={orders}
-        setOrders={setOrders}
-        products={products}
-        user={user}
-        loadOrders={loadOrders}
-        loadProducts={loadProducts}
         clients={clients}
       />
     </div>

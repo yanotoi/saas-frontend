@@ -7,15 +7,27 @@ export default function Clients({ clients, setClients, user, loadClients }) {
   const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState("");
 
+  const getAuthHeaders = () => ({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${user?.token}`,
+  });
+
   const addClient = async () => {
     if (!newClient) return alert("Ingresá un nombre");
-    await fetch(`${API}/clients`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newClient, user_id: user.id }),
-    });
-    setNewClient("");
-    loadClients();
+
+    try {
+      await fetch(`${API}/clients`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ name: newClient, user_id: user.id }),
+      });
+
+      setNewClient("");
+      loadClients();
+    } catch (err) {
+      console.error(err);
+      alert("Error al crear cliente");
+    }
   };
 
   const editClient = (client) => {
@@ -25,25 +37,45 @@ export default function Clients({ clients, setClients, user, loadClients }) {
 
   const updateClient = async (id) => {
     if (!editingName) return alert("El nombre no puede estar vacío");
-    await fetch(`${API}/clients/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: editingName }),
-    });
-    setEditingId(null);
-    setEditingName("");
-    loadClients();
+
+    try {
+      await fetch(`${API}/clients/${id}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ name: editingName }),
+      });
+
+      setEditingId(null);
+      setEditingName("");
+      loadClients();
+    } catch (err) {
+      console.error(err);
+      alert("Error al actualizar cliente");
+    }
   };
 
   const deleteClient = async (id) => {
     if (!confirm("¿Eliminar cliente?")) return;
-    await fetch(`${API}/clients/${id}`, { method: "DELETE" });
-    loadClients();
+
+    try {
+      await fetch(`${API}/clients/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+
+      loadClients();
+    } catch (err) {
+      console.error(err);
+      alert("Error al eliminar cliente");
+    }
   };
+
+  const safeClients = Array.isArray(clients) ? clients : [];
 
   return (
     <div>
       <h2>👤 Clientes</h2>
+
       <input
         placeholder="Nuevo cliente"
         value={newClient}
@@ -52,7 +84,7 @@ export default function Clients({ clients, setClients, user, loadClients }) {
       <button onClick={addClient}>Agregar</button>
 
       <ul>
-        {clients.map((c) => (
+        {safeClients.map((c) => (
           <li key={c.id}>
             {editingId === c.id ? (
               <>
