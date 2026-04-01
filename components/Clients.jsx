@@ -2,7 +2,7 @@ import { useState } from "react";
 
 const API = "https://web-production-6e9f.up.railway.app";
 
-export default function Clients({ clients, setClients, user, loadClients }) {
+export default function Clients({ clients = [], setClients, user }) {
   const [newClient, setNewClient] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState("");
@@ -12,31 +12,34 @@ export default function Clients({ clients, setClients, user, loadClients }) {
     Authorization: `Bearer ${user?.token}`,
   });
 
+  // Agregar cliente
   const addClient = async () => {
-    if (!newClient) return alert("Ingresá un nombre");
+    if (!newClient.trim()) return alert("Ingresá un nombre");
 
     try {
-      await fetch(`${API}/clients`, {
+      const res = await fetch(`${API}/clients`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({ name: newClient, user_id: user.id }),
       });
-
+      const created = await res.json();
+      setClients([...clients, created]); // agregamos localmente
       setNewClient("");
-      loadClients();
     } catch (err) {
       console.error(err);
       alert("Error al crear cliente");
     }
   };
 
+  // Editar cliente (local)
   const editClient = (client) => {
     setEditingId(client.id);
     setEditingName(client.name);
   };
 
+  // Actualizar cliente
   const updateClient = async (id) => {
-    if (!editingName) return alert("El nombre no puede estar vacío");
+    if (!editingName.trim()) return alert("El nombre no puede estar vacío");
 
     try {
       await fetch(`${API}/clients/${id}`, {
@@ -45,15 +48,21 @@ export default function Clients({ clients, setClients, user, loadClients }) {
         body: JSON.stringify({ name: editingName }),
       });
 
+      // actualizar localmente sin recargar toda la lista
+      const updatedClients = clients.map(c =>
+        c.id === id ? { ...c, name: editingName } : c
+      );
+      setClients(updatedClients);
+
       setEditingId(null);
       setEditingName("");
-      loadClients();
     } catch (err) {
       console.error(err);
       alert("Error al actualizar cliente");
     }
   };
 
+  // Eliminar cliente
   const deleteClient = async (id) => {
     if (!confirm("¿Eliminar cliente?")) return;
 
@@ -63,14 +72,13 @@ export default function Clients({ clients, setClients, user, loadClients }) {
         headers: getAuthHeaders(),
       });
 
-      loadClients();
+      // actualizar localmente sin recargar toda la lista
+      setClients(clients.filter(c => c.id !== id));
     } catch (err) {
       console.error(err);
       alert("Error al eliminar cliente");
     }
   };
-
-  const safeClients = Array.isArray(clients) ? clients : [];
 
   return (
     <div>
@@ -84,7 +92,7 @@ export default function Clients({ clients, setClients, user, loadClients }) {
       <button onClick={addClient}>Agregar</button>
 
       <ul>
-        {safeClients.map((c) => (
+        {clients.map((c) => (
           <li key={c.id}>
             {editingId === c.id ? (
               <>
