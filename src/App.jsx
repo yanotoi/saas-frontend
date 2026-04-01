@@ -102,7 +102,9 @@ function App() {
   };
 
   const deliverOrder = (id) => {
-    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: "delivered" } : o)));
+    setOrders((prev) =>
+      prev.map((o) => (o.id === id ? { ...o, status: "delivered" } : o))
+    );
   };
 
   if (!user) return <Login onLogin={setUser} />;
@@ -125,7 +127,11 @@ function App() {
         addProduct={addProduct}
       />
 
-      <Clients clients={clients} user={user} loadClients={loadClients} />
+      <Clients
+        clients={clients}
+        setClients={setClients}
+        user={user}
+      />
 
       <Orders
         orders={orders}

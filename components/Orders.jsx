@@ -13,16 +13,12 @@ export default function Orders({
   filter = "",
   setFilter = () => {}
 }) {
-  const safeProducts = Array.isArray(selectedProducts) ? selectedProducts : [];
-  const safeOrders = Array.isArray(orders) ? orders : [];
-  const safeClients = Array.isArray(clients) ? clients : [];
-
-  const total = safeProducts.reduce(
+  const total = selectedProducts.reduce(
     (acc, p) => acc + (p.price || 0) * (p.quantity || 0),
     0
   );
 
-  const filteredOrders = safeOrders.filter((o) =>
+  const filteredOrders = orders.filter(o =>
     (o.client || "").toLowerCase().includes((filter || "").toLowerCase())
   );
 
@@ -32,23 +28,24 @@ export default function Orders({
 
       <input
         list="clients"
-        value={clientName}
+        value={clientName || ""}
         onChange={(e) => setClientName(e.target.value)}
         placeholder="Cliente"
       />
+
       <datalist id="clients">
-        {safeClients.map((c) => (
+        {clients.map(c => (
           <option key={c.id} value={c.name} />
         ))}
       </datalist>
 
-      {safeProducts.map((p) => (
+      {selectedProducts.map(p => (
         <div key={p.id}>
           {p.name}
           <input
             type="number"
             value={p.quantity || 0}
-            onChange={(e) => updateQuantity(p.id, parseInt(e.target.value) || 0)}
+            onChange={(e) => updateQuantity(p.id, parseInt(e.target.value, 10) || 0)}
             min={0}
           />
         </div>
@@ -60,18 +57,17 @@ export default function Orders({
       <hr />
 
       <h2>🚚 Pedidos</h2>
+
       <input
         placeholder="Buscar cliente..."
-        value={filter}
+        value={filter || ""}
         onChange={(e) => setFilter(e.target.value)}
       />
 
       <ul>
-        {filteredOrders.map((o) => (
+        {filteredOrders.map(o => (
           <li key={o.id}>
-            {o.client} - ${o.total} -{" "}
-            {o.status === "pending" ? "Pendiente" : "Entregado"}
-
+            {o.client} - ${o.total} - {o.status === "pending" ? "Pendiente" : "Entregado"}
             {o.status === "pending" && (
               <button onClick={() => deliverOrder(o.id)}>Entregar</button>
             )}

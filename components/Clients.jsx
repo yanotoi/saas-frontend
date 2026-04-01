@@ -12,7 +12,6 @@ export default function Clients({ clients = [], setClients, user }) {
     Authorization: `Bearer ${user?.token}`,
   });
 
-  // Agregar cliente
   const addClient = async () => {
     if (!newClient.trim()) return alert("Ingresá un nombre");
 
@@ -23,7 +22,7 @@ export default function Clients({ clients = [], setClients, user }) {
         body: JSON.stringify({ name: newClient, user_id: user.id }),
       });
       const created = await res.json();
-      setClients([...clients, created]); // agregamos localmente
+      setClients([...clients, created]);
       setNewClient("");
     } catch (err) {
       console.error(err);
@@ -31,13 +30,11 @@ export default function Clients({ clients = [], setClients, user }) {
     }
   };
 
-  // Editar cliente (local)
   const editClient = (client) => {
     setEditingId(client.id);
     setEditingName(client.name);
   };
 
-  // Actualizar cliente
   const updateClient = async (id) => {
     if (!editingName.trim()) return alert("El nombre no puede estar vacío");
 
@@ -48,12 +45,7 @@ export default function Clients({ clients = [], setClients, user }) {
         body: JSON.stringify({ name: editingName }),
       });
 
-      // actualizar localmente sin recargar toda la lista
-      const updatedClients = clients.map(c =>
-        c.id === id ? { ...c, name: editingName } : c
-      );
-      setClients(updatedClients);
-
+      setClients(clients.map(c => (c.id === id ? { ...c, name: editingName } : c)));
       setEditingId(null);
       setEditingName("");
     } catch (err) {
@@ -62,7 +54,6 @@ export default function Clients({ clients = [], setClients, user }) {
     }
   };
 
-  // Eliminar cliente
   const deleteClient = async (id) => {
     if (!confirm("¿Eliminar cliente?")) return;
 
@@ -72,7 +63,6 @@ export default function Clients({ clients = [], setClients, user }) {
         headers: getAuthHeaders(),
       });
 
-      // actualizar localmente sin recargar toda la lista
       setClients(clients.filter(c => c.id !== id));
     } catch (err) {
       console.error(err);
@@ -94,20 +84,21 @@ export default function Clients({ clients = [], setClients, user }) {
       <ul>
         {clients.map((c) => (
           <li key={c.id}>
-            {editingId === c.id ? (
+            <span style={{ display: editingId === c.id ? "none" : "inline" }}>
+              {c.name}{" "}
+              <button onClick={() => editClient(c)}>Editar</button>
+              <button onClick={() => deleteClient(c.id)}>Eliminar</button>
+            </span>
+
+            {editingId === c.id && (
               <>
                 <input
                   value={editingName}
                   onChange={(e) => setEditingName(e.target.value)}
+                  autoFocus
                 />
                 <button onClick={() => updateClient(c.id)}>Guardar</button>
                 <button onClick={() => setEditingId(null)}>Cancelar</button>
-              </>
-            ) : (
-              <>
-                {c.name}{" "}
-                <button onClick={() => editClient(c)}>Editar</button>
-                <button onClick={() => deleteClient(c.id)}>Eliminar</button>
               </>
             )}
           </li>
