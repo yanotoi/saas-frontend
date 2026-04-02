@@ -4,7 +4,6 @@ export default function Orders({
   orders = [],
   clients = [],
   selectedProducts = [],
-  toggleProduct = () => {},
   updateQuantity = () => {},
   clientName = "",
   setClientName = () => {},
@@ -14,7 +13,7 @@ export default function Orders({
   setFilter = () => {}
 }) {
   const total = selectedProducts.reduce(
-    (acc, p) => acc + (p.price || 0) * (p.quantity || 0),
+    (acc, p) => acc + Number(p.price) * Number(p.quantity),
     0
   );
 
@@ -28,7 +27,7 @@ export default function Orders({
 
       <input
         list="clients"
-        value={clientName || ""}
+        value={clientName}
         onChange={(e) => setClientName(e.target.value)}
         placeholder="Cliente"
       />
@@ -44,14 +43,16 @@ export default function Orders({
           {p.name}
           <input
             type="number"
-            value={p.quantity || 1}
-            onChange={(e) => updateQuantity(p.id, parseInt(e.target.value, 10) || 1)}
+            value={p.quantity}
+            onChange={(e) =>
+              updateQuantity(p.id, parseInt(e.target.value, 10) || 1)
+            }
             min={1}
           />
         </div>
       ))}
 
-      <h3>Total: ${Number(total).toFixed(2)}</h3>
+      <h3>Total: ${total.toFixed(2)}</h3>
       <button onClick={createOrder}>Crear Pedido</button>
 
       <hr />
@@ -60,16 +61,20 @@ export default function Orders({
 
       <input
         placeholder="Buscar cliente..."
-        value={filter || ""}
+        value={filter}
         onChange={(e) => setFilter(e.target.value)}
       />
 
       <ul>
         {filteredOrders.map(o => (
           <li key={o.id}>
-            {o.client} - ${o.total} - {o.status === "pending" ? "Pendiente" : "Entregado"}
+            {o.client} - ${Number(o.total).toFixed(2)} -{" "}
+            {o.status === "pending" ? "Pendiente" : "Entregado"}
+
             {o.status === "pending" && (
-              <button onClick={() => deliverOrder(o.id)}>Entregar</button>
+              <button onClick={() => deliverOrder(o.id)}>
+                Entregar
+              </button>
             )}
           </li>
         ))}

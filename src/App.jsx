@@ -15,19 +15,16 @@ import {
 function App() {
   const [user, setUser] = useState(null);
 
-  // Productos
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
 
-  // Pedidos
   const [orders, setOrders] = useState([]);
   const [clientName, setClientName] = useState("");
   const [filter, setFilter] = useState("");
 
-  // Clientes
   const [clients, setClients] = useState([]);
 
   useEffect(() => {
@@ -43,33 +40,30 @@ function App() {
   // ==========================
   // LOADERS
   // ==========================
-  const loadProducts = useCallback(() => {
+  const loadProducts = useCallback(async () => {
     if (!user) return;
-    fetchProducts(user.id).then((data) =>
-      setProducts(
-        Array.isArray(data)
-          ? data.map((p) => ({
-              ...p,
-              price: Number(p.price),
-              stock: Number(p.stock),
-            }))
-          : []
-      )
+    const data = await fetchProducts(user.id);
+    setProducts(
+      Array.isArray(data)
+        ? data.map(p => ({
+            ...p,
+            price: Number(p.price),
+            stock: Number(p.stock)
+          }))
+        : []
     );
   }, [user]);
 
-  const loadOrders = useCallback(() => {
+  const loadOrders = useCallback(async () => {
     if (!user) return;
-    fetchOrders(user.id).then((data) =>
-      setOrders(Array.isArray(data) ? data : [])
-    );
+    const data = await fetchOrders(user.id);
+    setOrders(Array.isArray(data) ? data : []);
   }, [user]);
 
-  const loadClients = useCallback(() => {
+  const loadClients = useCallback(async () => {
     if (!user) return;
-    fetchClients(user.id).then((data) =>
-      setClients(Array.isArray(data) ? data : [])
-    );
+    const data = await fetchClients(user.id);
+    setClients(Array.isArray(data) ? data : []);
   }, [user]);
 
   useEffect(() => {
@@ -81,12 +75,12 @@ function App() {
   }, [user, loadProducts, loadOrders, loadClients]);
 
   // ==========================
-  // PRODUCTS (🔥 FIX REAL)
+  // PRODUCTS
   // ==========================
   const toggleProduct = (product) => {
-    setSelectedProducts((prev) => {
-      const exists = prev.find((p) => p.id === product.id);
-      if (exists) return prev.filter((p) => p.id !== product.id);
+    setSelectedProducts(prev => {
+      const exists = prev.find(p => p.id === product.id);
+      if (exists) return prev.filter(p => p.id !== product.id);
       return [...prev, { ...product, quantity: 1 }];
     });
   };
@@ -101,7 +95,6 @@ function App() {
         stock: Number(stock),
       });
 
-      // 🔥 clave: recargar desde backend
       await loadProducts();
 
       setName("");
@@ -117,54 +110,66 @@ function App() {
   // ORDERS
   // ==========================
   const updateQuantity = (id, quantity) => {
-    setSelectedProducts((prev) =>
-      prev.map((p) =>
+    setSelectedProducts(prev =>
+      prev.map(p =>
         p.id === id ? { ...p, quantity: Number(quantity) } : p
       )
     );
   };
 
-  // ==========================
-// CREAR PEDIDO REAL
-// ==========================
-const createOrder = async () => {
-  if (!clientName || selectedProducts.length === 0) return;
+  // 🔥 CREAR PEDIDO REAL + UI INSTANTÁNEA
+  const createOrder = async () => {
+    if (!clientName || selectedProducts.length === 0) return;
 
-  try {
-    await apiCreateOrder({
-      client_name: clientName,
-      items: selectedProducts.map(p => ({
-        id: p.id,
-        price: p.price,
-        quantity: p.quantity
-      }))
-    });
+    try {
+      const res = await apiCreateOrder({
+        client_name: clientName,
+        items: selectedProducts.map(p => ({
+          id: p.id,
+          price: Number(p.price),
+          quantity: Number(p.quantity)
+        }))
+      });
 
-    await loadOrders();
-    await loadProducts(); // 🔥 sincroniza stock
+      // 🔥 agregamos instantáneamente el pedido
+      setOrders(prev => [
+        {
+          ...res,
+          client: clientName,
+          total: Number(res.total),
+          status: "pending"
+        },
+        ...prev
+      ]);
 
-    setSelectedProducts([]);
-    setClientName("");
-  } catch (err) {
-    console.error(err);
-    alert("Error al crear pedido");
-  }
-};
+      await loadProducts();
 
-// ==========================
-// ENTREGAR PEDIDO REAL
-// ==========================
-const deliverOrder = async (id) => {
-  try {
-    await apiDeliverOrder(id);
+      setSelectedProducts([]);
+      setClientName("");
+    } catch (err) {
+      console.error(err);
+      alert("Error al crear pedido");
+    }
+  };
 
-    await loadOrders();
-    await loadProducts(); // 🔥 baja stock en UI
-  } catch (err) {
-    console.error(err);
-    alert("Error al entregar pedido");
-  }
-};
+  // 🔥 ENTREGAR PEDIDO + UPDATE INSTANTÁNEO
+  const deliverOrder = async (id) => {
+    try {
+      await apiDeliverOrder(id);
+
+      // 🔥 update inmediato sin esperar fetch
+      setOrders(prev =>
+        prev.map(o =>
+          o.id === id ? { ...o, status: "delivered" } : o
+        )
+      );
+
+      await loadProducts();
+    } catch (err) {
+      console.error(err);
+      alert("Error al entregar pedido");
+    }
+  };
 
   if (!user) return <Login onLogin={setUser} />;
 

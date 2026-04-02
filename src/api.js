@@ -61,7 +61,7 @@ export const createOrder = (data) =>
       ...authHeader(),
     },
     body: JSON.stringify(data),
-  }).then(res => res.json());
+  }).then(res => res.json()); // 🔥 IMPORTANTE
 
 export const deliverOrder = (id) =>
   fetch(`${API}/orders/${id}/deliver`, {
