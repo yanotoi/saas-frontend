@@ -109,3 +109,68 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+
+/* POS REAL */
+.pos-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.pos-left {
+  width: 65%;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.pos-right {
+  width: 35%;
+  background: #111;
+  color: #fff;
+  padding: 15px;
+  overflow-y: auto;
+}
+
+/* GRID TÁCTIL */
+.pos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pos-product {
+  padding: 20px;
+  font-size: 18px;
+  border-radius: 10px;
+  border: none;
+  background: #eee;
+  cursor: pointer;
+}
+
+.pos-product.active {
+  background: #00c853;
+  color: white;
+}
+
+/* CARRITO */
+.pos-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.pos-total {
+  font-size: 26px;
+}
+
+.pos-pay {
+  width: 100%;
+  background: #00c853;
+  padding: 15px;
+  font-size: 22px;
+  border: none;
+  border-radius: 10px;
+  margin-top: 10px;
+}

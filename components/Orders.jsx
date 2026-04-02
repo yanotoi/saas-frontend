@@ -15,7 +15,8 @@ export default function Orders({
   setStatus = () => {},
   date = "",
   setDate = () => {},
-  stats = { total_sales: 0, total_orders: 0 }
+  stats = { total_sales: 0, total_orders: 0 },
+  closeCash = () => {}
 }) {
   const total = selectedProducts.reduce(
     (acc, p) => acc + Number(p.price || 0) * Number(p.quantity || 1),
@@ -27,52 +28,76 @@ export default function Orders({
   );
 
   return (
-    <div>
-      <h2>🧾 Crear Pedido</h2>
+    <div className="pos-right">
 
-      <input
-        list="clients"
-        value={clientName}
-        onChange={(e) => setClientName(e.target.value)}
-        placeholder="Cliente"
-      />
+      <div className="pos-cart">
+        <h2>🧾 Pedido</h2>
 
-      <datalist id="clients">
-        {clients.map(c => (
-          <option key={c.id} value={c.name} />
-        ))}
-      </datalist>
+        <input
+          list="clients"
+          value={clientName}
+          onChange={(e) => setClientName(e.target.value)}
+          placeholder="Cliente"
+          className="pos-input"
+        />
 
-      {selectedProducts.map(p => (
-        <div key={p.id}>
-          {p.name}
-          <input
-            type="number"
-            value={p.quantity}
-            onChange={(e) =>
-              updateQuantity(p.id, parseInt(e.target.value, 10) || 1)
-            }
-            min={1}
-          />
+        <datalist id="clients">
+          {clients.map(c => (
+            <option key={c.id} value={c.name} />
+          ))}
+        </datalist>
+
+        <div className="pos-items">
+          {selectedProducts.map(p => (
+            <div key={p.id} className="pos-item">
+              <span>{p.name}</span>
+
+              <input
+                type="number"
+                value={p.quantity}
+                onChange={(e) =>
+                  updateQuantity(p.id, parseInt(e.target.value, 10) || 1)
+                }
+              />
+            </div>
+          ))}
         </div>
-      ))}
 
-      <h3>Total: ${total.toFixed(2)}</h3>
-      <button onClick={createOrder}>Crear Pedido</button>
+        <h3 className="pos-total">Total: ${total.toFixed(2)}</h3>
 
-      <hr />
+        <button className="pos-pay" onClick={createOrder}>
+          💳 COBRAR
+        </button>
+      </div>
 
-      <h2>🚚 Pedidos</h2>
-
-      {/* 💰 CAJA */}
+      {/* CAJA ORIGINAL (NO TOCADA) */}
       <div style={{ marginBottom: 20 }}>
         <h3>💰 Caja del día</h3>
         <div>
           Ventas: ${stats.total_sales} | Pedidos: {stats.total_orders}
         </div>
+
+        <button
+          onClick={closeCash}
+          style={{
+            marginTop: 10,
+            background: "#111",
+            color: "#fff",
+            padding: "10px 15px",
+            borderRadius: 8,
+            border: "none",
+            cursor: "pointer"
+          }}
+        >
+          💰 Cerrar Caja
+        </button>
       </div>
 
-      {/* 🔎 FILTROS */}
+      <hr />
+
+      {/* TODO TU SISTEMA DE PEDIDOS QUEDA IGUAL */}
+      <h2>🚚 Pedidos</h2>
+
       <div style={{ display: "flex", gap: 10, marginBottom: 15 }}>
         <button onClick={() => setStatus("all")}>Todos</button>
         <button onClick={() => setStatus("pending")}>Pendientes</button>

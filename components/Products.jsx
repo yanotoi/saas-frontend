@@ -13,9 +13,11 @@ export default function Products({
   addProduct = () => {}
 }) {
   return (
-    <div>
+    <div className="pos-left">
+
       <h2>📦 Productos</h2>
 
+      {/* FORM ORIGINAL */}
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -36,6 +38,26 @@ export default function Products({
 
       <button onClick={addProduct}>Agregar</button>
 
+      {/* 🔥 GRID POS */}
+      <div className="pos-grid">
+        {products.map((p) => {
+          const selected = selectedProducts.some(sp => sp.id === p.id);
+
+          return (
+            <button
+              key={p.id}
+              className={`pos-product ${selected ? "active" : ""}`}
+              onClick={() => toggleProduct(p)}
+            >
+              <div>{p.name}</div>
+              <div>${p.price}</div>
+              <small>Stock: {p.stock}</small>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* LISTA ORIGINAL (NO LA BORRO) */}
       <ul>
         {products.map((p) => (
           <li key={p.id}>

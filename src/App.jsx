@@ -8,6 +8,7 @@ import {
   fetchOrders,
   fetchClients,
   fetchStats,
+  closeCash, // 👈 NUEVO
   createProduct as apiCreateProduct,
   createOrder as apiCreateOrder,
   deliverOrder as apiDeliverOrder
@@ -40,6 +41,55 @@ function App() {
   const logout = () => {
     localStorage.removeItem("user");
     setUser(null);
+  };
+
+  // ==========================
+  // 🔥 PRINT TICKET
+  // ==========================
+  const printTicket = (order, items) => {
+    const win = window.open("", "PRINT", "height=600,width=400");
+
+    win.document.write(`
+      <html>
+        <head>
+          <title>Ticket</title>
+          <style>
+            body {
+              font-family: monospace;
+              padding: 10px;
+            }
+            h2 {
+              text-align: center;
+            }
+            .line {
+              display: flex;
+              justify-content: space-between;
+            }
+            hr {
+              border-top: 1px dashed black;
+            }
+          </style>
+        </head>
+        <body>
+          <h2>🧾 Ticket</h2>
+          <p>Cliente: ${order.client}</p>
+          <p>Fecha: ${new Date().toLocaleString()}</p>
+          <hr/>
+          ${items.map(p => `
+            <div class="line">
+              <span>${p.name} x${p.quantity}</span>
+              <span>$${(p.price * p.quantity).toFixed(2)}</span>
+            </div>
+          `).join("")}
+          <hr/>
+          <h3>Total: $${order.total.toFixed(2)}</h3>
+        </body>
+      </html>
+    `);
+
+    win.document.close();
+    win.focus();
+    win.print();
   };
 
   // ==========================
@@ -134,16 +184,18 @@ function App() {
         }))
       });
 
-      setOrders(prev => [
-        {
-          id: res.id,
-          client: clientName,
-          total: Number(res.total),
-          status: "pending",
-          products: selectedProducts
-        },
-        ...prev
-      ]);
+      const newOrder = {
+        id: res.id,
+        client: clientName,
+        total: Number(res.total),
+        status: "pending",
+        products: selectedProducts
+      };
+
+      setOrders(prev => [newOrder, ...prev]);
+
+      // 🔥 IMPRIME AUTOMÁTICO
+      printTicket(newOrder, selectedProducts);
 
       await loadProducts();
       await loadStats();
@@ -176,51 +228,59 @@ function App() {
     }
   };
 
+  const handleCloseCash = async () => {
+  if (!confirm("¿Cerrar caja del día?")) return;
+
+  try {
+    await closeCash();
+    alert("Caja cerrada correctamente");
+
+    await loadStats();
+  } catch (err) {
+    console.error(err);
+    alert("Error al cerrar caja");
+  }
+};
+
   if (!user) return <Login onLogin={setUser} />;
 
-  return (
-    <div style={{ padding: 20, maxWidth: 900, margin: "auto" }}>
-      <button onClick={logout}>Cerrar sesión</button>
-      <h1>📱 Sistema de Pedidos PRO</h1>
+ return (
+  <div className="pos-container">
 
-      <Products
-        products={products}
-        selectedProducts={selectedProducts}
-        toggleProduct={toggleProduct}
-        name={name}
-        setName={setName}
-        price={price}
-        setPrice={setPrice}
-        stock={stock}
-        setStock={setStock}
-        addProduct={addProduct}
-      />
+    <Products
+      products={products}
+      selectedProducts={selectedProducts}
+      toggleProduct={toggleProduct}
+      name={name}
+      setName={setName}
+      price={price}
+      setPrice={setPrice}
+      stock={stock}
+      setStock={setStock}
+      addProduct={addProduct}
+    />
 
-      <Clients
-        clients={clients}
-        setClients={setClients}
-        user={user}
-      />
+    <Orders
+      orders={orders}
+      clients={clients}
+      selectedProducts={selectedProducts}
+      updateQuantity={updateQuantity}
+      clientName={clientName}
+      setClientName={setClientName}
+      createOrder={createOrder}
+      deliverOrder={deliverOrder}
+      filter={filter}
+      setFilter={setFilter}
+      status={status}
+      setStatus={setStatus}
+      date={date}
+      setDate={setDate}
+      stats={stats}
+      closeCash={handleCloseCash}
+    />
 
-      <Orders
-        orders={orders}
-        clients={clients}
-        selectedProducts={selectedProducts}
-        updateQuantity={updateQuantity}
-        clientName={clientName}
-        setClientName={setClientName}
-        createOrder={createOrder}
-        deliverOrder={deliverOrder}
-        filter={filter}
-        setFilter={setFilter}
-        status={status}
-        setStatus={setStatus}
-        date={date}
-        setDate={setDate}
-        stats={stats}
-      />
-    </div>
-  );
+  </div>
+);
 }
 
 export default App;

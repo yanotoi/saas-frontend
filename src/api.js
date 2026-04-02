@@ -8,6 +8,9 @@ const authHeader = () => {
     : {};
 };
 
+// ==========================
+// AUTH
+// ==========================
 export const loginUser = (email, password) =>
   fetch(`${API}/auth/login`, {
     method: "POST",
@@ -25,31 +28,43 @@ export const registerUser = (email, password) =>
 // ==========================
 // GET
 // ==========================
-export const fetchProducts = (userId) =>
-  fetch(`${API}/products?user_id=${userId}`, {
+export const fetchProducts = () =>
+  fetch(`${API}/products`, {
     headers: authHeader(),
   }).then(res => res.json());
 
-export const fetchOrders = (params = {}) => {
-  const query = new URLSearchParams(params).toString();
+export const fetchOrders = ({ status, date }) => {
+  const params = new URLSearchParams();
 
-  return fetch(`${API}/orders?${query}`, {
+  if (status && status !== "all") params.append("status", status);
+  if (date) params.append("date", date);
+
+  return fetch(`${API}/orders?${params.toString()}`, {
     headers: authHeader(),
   }).then(res => res.json());
 };
+
+export const fetchClients = () =>
+  fetch(`${API}/clients`, {
+    headers: authHeader(),
+  }).then(res => res.json());
 
 export const fetchStats = () =>
   fetch(`${API}/orders/stats`, {
     headers: authHeader(),
   }).then(res => res.json());
 
-export const fetchClients = (userId) =>
-  fetch(`${API}/clients?user_id=${userId}`, {
+// ==========================
+// 🔥 NUEVO → CERRAR CAJA
+// ==========================
+export const closeCash = () =>
+  fetch(`${API}/orders/close-cash`, {
+    method: "POST",
     headers: authHeader(),
   }).then(res => res.json());
 
 // ==========================
-// POST / PUT / DELETE
+// POST / PUT
 // ==========================
 export const createProduct = (data) =>
   fetch(`${API}/products`, {
@@ -69,7 +84,7 @@ export const createOrder = (data) =>
       ...authHeader(),
     },
     body: JSON.stringify(data),
-  }).then(res => res.json()); // 🔥 IMPORTANTE
+  }).then(res => res.json());
 
 export const deliverOrder = (id) =>
   fetch(`${API}/orders/${id}/deliver`, {
