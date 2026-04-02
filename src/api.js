@@ -51,7 +51,7 @@ export const createProduct = (data) =>
       ...authHeader(),
     },
     body: JSON.stringify(data),
-  });
+  }).then(res => res.json());
 
 export const createOrder = (data) =>
   fetch(`${API}/orders`, {
@@ -61,10 +61,10 @@ export const createOrder = (data) =>
       ...authHeader(),
     },
     body: JSON.stringify(data),
-  });
+  }).then(res => res.json());
 
 export const deliverOrder = (id) =>
   fetch(`${API}/orders/${id}/deliver`, {
     method: "PUT",
     headers: authHeader(),
-  });
+  }).then(res => res.json());

@@ -12,33 +12,32 @@ export default function Products({
   setStock = () => {},
   addProduct = () => {}
 }) {
-  const safeProducts = Array.isArray(products) ? products : [];
-
   return (
     <div>
       <h2>📦 Productos</h2>
 
       <input
-        value={name || ""}
+        value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Nombre"
       />
       <input
         type="number"
-        value={price || ""}
+        value={price}
         onChange={(e) => setPrice(e.target.value)}
         placeholder="Precio"
       />
       <input
         type="number"
-        value={stock || ""}
+        value={stock}
         onChange={(e) => setStock(e.target.value)}
         placeholder="Stock"
       />
+
       <button onClick={addProduct}>Agregar</button>
 
       <ul>
-        {safeProducts.map((p) => (
+        {products.map((p) => (
           <li key={p.id}>
             <label>
               <input
@@ -47,7 +46,6 @@ export default function Products({
                 onChange={() => toggleProduct(p)}
               />
               {p.name} - ${p.price} - Stock: {p.stock}
-              {p.stock < 5 && <span style={{ color: "red" }}> ⚠ Bajo stock</span>}
             </label>
           </li>
         ))}

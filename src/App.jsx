@@ -3,7 +3,14 @@ import Clients from "../components/Clients";
 import Login from "../components/Login";
 import Products from "../components/Products";
 import Orders from "../components/Orders";
-import { fetchProducts, fetchOrders, fetchClients } from "./api";
+import {
+  fetchProducts,
+  fetchOrders,
+  fetchClients,
+  createProduct as apiCreateProduct,
+  createOrder as apiCreateOrder,
+  deliverOrder as apiDeliverOrder
+} from "./api";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -33,21 +40,36 @@ function App() {
     setUser(null);
   };
 
+  // ==========================
+  // LOADERS
+  // ==========================
   const loadProducts = useCallback(() => {
     if (!user) return;
     fetchProducts(user.id).then((data) =>
-      setProducts(Array.isArray(data) ? data.map(p => ({...p, price: parseFloat(p.price), stock: parseInt(p.stock)})) : [])
+      setProducts(
+        Array.isArray(data)
+          ? data.map((p) => ({
+              ...p,
+              price: Number(p.price),
+              stock: Number(p.stock),
+            }))
+          : []
+      )
     );
   }, [user]);
 
   const loadOrders = useCallback(() => {
     if (!user) return;
-    fetchOrders(user.id).then((data) => setOrders(Array.isArray(data) ? data : []));
+    fetchOrders(user.id).then((data) =>
+      setOrders(Array.isArray(data) ? data : [])
+    );
   }, [user]);
 
   const loadClients = useCallback(() => {
     if (!user) return;
-    fetchClients(user.id).then((data) => setClients(Array.isArray(data) ? data : []));
+    fetchClients(user.id).then((data) =>
+      setClients(Array.isArray(data) ? data : [])
+    );
   }, [user]);
 
   useEffect(() => {
@@ -58,56 +80,91 @@ function App() {
     }
   }, [user, loadProducts, loadOrders, loadClients]);
 
-  // FUNCIONES PRODUCTS
+  // ==========================
+  // PRODUCTS (🔥 FIX REAL)
+  // ==========================
   const toggleProduct = (product) => {
     setSelectedProducts((prev) => {
-      const exists = prev.find(p => p.id === product.id);
-      if (exists) return prev.filter(p => p.id !== product.id);
-      return [...prev, {...product, quantity: 1}]; // inicializamos quantity
+      const exists = prev.find((p) => p.id === product.id);
+      if (exists) return prev.filter((p) => p.id !== product.id);
+      return [...prev, { ...product, quantity: 1 }];
     });
   };
 
-  const addProduct = () => {
+  const addProduct = async () => {
     if (!name || !price || !stock) return;
-    const newProduct = {
-      id: products.length + 1,
-      name,
-      price: parseFloat(price),
-      stock: parseInt(stock),
-    };
-    setProducts((prev) => [...prev, newProduct]);
-    setName("");
-    setPrice("");
-    setStock("");
+
+    try {
+      await apiCreateProduct({
+        name,
+        price: Number(price),
+        stock: Number(stock),
+      });
+
+      // 🔥 clave: recargar desde backend
+      await loadProducts();
+
+      setName("");
+      setPrice("");
+      setStock("");
+    } catch (err) {
+      console.error(err);
+      alert("Error al crear producto");
+    }
   };
 
-  // FUNCIONES ORDERS
+  // ==========================
+  // ORDERS
+  // ==========================
   const updateQuantity = (id, quantity) => {
     setSelectedProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, quantity } : p))
+      prev.map((p) =>
+        p.id === id ? { ...p, quantity: Number(quantity) } : p
+      )
     );
   };
 
-  const createOrder = () => {
-    if (!clientName || selectedProducts.length === 0) return;
-    const total = selectedProducts.reduce((acc, p) => acc + p.price * p.quantity, 0);
-    const newOrder = {
-      id: orders.length + 1,
-      client: clientName,
-      products: [...selectedProducts],
-      total,
-      status: "pending",
-    };
-    setOrders((prev) => [...prev, newOrder]);
+  // ==========================
+// CREAR PEDIDO REAL
+// ==========================
+const createOrder = async () => {
+  if (!clientName || selectedProducts.length === 0) return;
+
+  try {
+    await apiCreateOrder({
+      client_name: clientName,
+      items: selectedProducts.map(p => ({
+        id: p.id,
+        price: p.price,
+        quantity: p.quantity
+      }))
+    });
+
+    await loadOrders();
+    await loadProducts(); // 🔥 sincroniza stock
+
     setSelectedProducts([]);
     setClientName("");
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Error al crear pedido");
+  }
+};
 
-  const deliverOrder = (id) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, status: "delivered" } : o))
-    );
-  };
+// ==========================
+// ENTREGAR PEDIDO REAL
+// ==========================
+const deliverOrder = async (id) => {
+  try {
+    await apiDeliverOrder(id);
+
+    await loadOrders();
+    await loadProducts(); // 🔥 baja stock en UI
+  } catch (err) {
+    console.error(err);
+    alert("Error al entregar pedido");
+  }
+};
 
   if (!user) return <Login onLogin={setUser} />;
 
@@ -139,7 +196,6 @@ function App() {
         orders={orders}
         clients={clients}
         selectedProducts={selectedProducts}
-        toggleProduct={toggleProduct}
         updateQuantity={updateQuantity}
         clientName={clientName}
         setClientName={setClientName}

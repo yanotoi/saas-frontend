@@ -51,7 +51,7 @@ export default function Orders({
         </div>
       ))}
 
-      <h3>Total: ${total}</h3>
+      <h3>Total: ${Number(total).toFixed(2)}</h3>
       <button onClick={createOrder}>Crear Pedido</button>
 
       <hr />
