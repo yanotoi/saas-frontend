@@ -10,7 +10,12 @@ export default function Orders({
   createOrder = () => {},
   deliverOrder = () => {},
   filter = "",
-  setFilter = () => {}
+  setFilter = () => {},
+  status = "all",
+  setStatus = () => {},
+  date = "",
+  setDate = () => {},
+  stats = { total_sales: 0, total_orders: 0 }
 }) {
   const total = selectedProducts.reduce(
     (acc, p) => acc + Number(p.price || 0) * Number(p.quantity || 1),
@@ -58,6 +63,27 @@ export default function Orders({
       <hr />
 
       <h2>🚚 Pedidos</h2>
+
+      {/* 💰 CAJA */}
+      <div style={{ marginBottom: 20 }}>
+        <h3>💰 Caja del día</h3>
+        <div>
+          Ventas: ${stats.total_sales} | Pedidos: {stats.total_orders}
+        </div>
+      </div>
+
+      {/* 🔎 FILTROS */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 15 }}>
+        <button onClick={() => setStatus("all")}>Todos</button>
+        <button onClick={() => setStatus("pending")}>Pendientes</button>
+        <button onClick={() => setStatus("delivered")}>Entregados</button>
+
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
+      </div>
 
       <input
         placeholder="Buscar cliente..."

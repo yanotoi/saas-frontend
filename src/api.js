@@ -30,8 +30,16 @@ export const fetchProducts = (userId) =>
     headers: authHeader(),
   }).then(res => res.json());
 
-export const fetchOrders = (userId) =>
-  fetch(`${API}/orders?user_id=${userId}`, {
+export const fetchOrders = (params = {}) => {
+  const query = new URLSearchParams(params).toString();
+
+  return fetch(`${API}/orders?${query}`, {
+    headers: authHeader(),
+  }).then(res => res.json());
+};
+
+export const fetchStats = () =>
+  fetch(`${API}/orders/stats`, {
     headers: authHeader(),
   }).then(res => res.json());
 

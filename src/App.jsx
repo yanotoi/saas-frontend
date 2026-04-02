@@ -7,6 +7,7 @@ import {
   fetchProducts,
   fetchOrders,
   fetchClients,
+  fetchStats,
   createProduct as apiCreateProduct,
   createOrder as apiCreateOrder,
   deliverOrder as apiDeliverOrder
@@ -24,6 +25,10 @@ function App() {
   const [orders, setOrders] = useState([]);
   const [clientName, setClientName] = useState("");
   const [filter, setFilter] = useState("");
+
+  const [status, setStatus] = useState("all");
+  const [date, setDate] = useState("");
+  const [stats, setStats] = useState({ total_sales: 0, total_orders: 0 });
 
   const [clients, setClients] = useState([]);
 
@@ -43,22 +48,14 @@ function App() {
   const loadProducts = useCallback(async () => {
     if (!user) return;
     const data = await fetchProducts(user.id);
-    setProducts(
-      Array.isArray(data)
-        ? data.map(p => ({
-            ...p,
-            price: Number(p.price),
-            stock: Number(p.stock)
-          }))
-        : []
-    );
+    setProducts(Array.isArray(data) ? data : []);
   }, [user]);
 
   const loadOrders = useCallback(async () => {
     if (!user) return;
-    const data = await fetchOrders(user.id);
+    const data = await fetchOrders({ status, date });
     setOrders(Array.isArray(data) ? data : []);
-  }, [user]);
+  }, [user, status, date]);
 
   const loadClients = useCallback(async () => {
     if (!user) return;
@@ -66,13 +63,20 @@ function App() {
     setClients(Array.isArray(data) ? data : []);
   }, [user]);
 
+  const loadStats = useCallback(async () => {
+    if (!user) return;
+    const data = await fetchStats();
+    setStats(data);
+  }, [user]);
+
   useEffect(() => {
     if (user) {
       loadProducts();
       loadOrders();
       loadClients();
+      loadStats();
     }
-  }, [user, loadProducts, loadOrders, loadClients]);
+  }, [user, loadProducts, loadOrders, loadClients, loadStats]);
 
   // ==========================
   // PRODUCTS
@@ -117,71 +121,67 @@ function App() {
     );
   };
 
-  // 🔥 CREAR PEDIDO REAL + UI INSTANTÁNEA
   const createOrder = async () => {
-  if (!clientName || selectedProducts.length === 0) return;
+    if (!clientName || selectedProducts.length === 0) return;
 
-  try {
-    const res = await apiCreateOrder({
-      client_name: clientName,
-      items: selectedProducts.map(p => ({
-        id: p.id,
-        price: Number(p.price),
-        quantity: Number(p.quantity || 1)
-      }))
-    });
+    try {
+      const res = await apiCreateOrder({
+        client_name: clientName,
+        items: selectedProducts.map(p => ({
+          id: p.id,
+          price: Number(p.price),
+          quantity: Number(p.quantity || 1)
+        }))
+      });
 
-    // 🔥 SI backend falla, no rompe UI
-    const total = Number(res?.total || 0);
+      setOrders(prev => [
+        {
+          id: res.id,
+          client: clientName,
+          total: Number(res.total),
+          status: "pending",
+          products: selectedProducts
+        },
+        ...prev
+      ]);
 
-    setOrders(prev => [
-      {
-        id: res.id,
-        client: clientName,
-        total,
-        status: "pending"
-      },
-      ...prev
-    ]);
+      await loadProducts();
+      await loadStats();
 
-    await loadProducts();
+      setSelectedProducts([]);
+      setClientName("");
 
-    setSelectedProducts([]);
-    setClientName("");
+    } catch (err) {
+      console.error(err);
+      alert("Error al crear pedido");
+    }
+  };
 
-  } catch (err) {
-    console.error(err);
-    alert("Error al crear pedido");
-  }
-};
-
-  // 🔥 ENTREGAR PEDIDO + UPDATE INSTANTÁNEO
   const deliverOrder = async (id) => {
-  try {
-    await apiDeliverOrder(id);
+    try {
+      await apiDeliverOrder(id);
 
-    // 🔥 UPDATE INMEDIATO
-    setOrders(prev =>
-      prev.map(o =>
-        o.id === id ? { ...o, status: "delivered" } : o
-      )
-    );
+      setOrders(prev =>
+        prev.map(o =>
+          o.id === id ? { ...o, status: "delivered" } : o
+        )
+      );
 
-    // 🔥 sincroniza stock y evita desfasajes
-    await loadProducts();
+      await loadProducts();
+      await loadStats();
 
-  } catch (err) {
-    console.error(err);
-    alert("Error al entregar pedido");
-  }
-};
+    } catch (err) {
+      console.error(err);
+      alert("Error al entregar pedido");
+    }
+  };
 
   if (!user) return <Login onLogin={setUser} />;
 
   return (
-    <div style={{ padding: 20, maxWidth: 800, margin: "auto" }}>
+    <div style={{ padding: 20, maxWidth: 900, margin: "auto" }}>
       <button onClick={logout}>Cerrar sesión</button>
-      <h1>Sistema de Pedidos y Stock</h1>
+      <h1>📱 Sistema de Pedidos PRO</h1>
 
       <Products
         products={products}
@@ -213,6 +213,11 @@ function App() {
         deliverOrder={deliverOrder}
         filter={filter}
         setFilter={setFilter}
+        status={status}
+        setStatus={setStatus}
+        date={date}
+        setDate={setDate}
+        stats={stats}
       />
     </div>
   );
