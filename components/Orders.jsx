@@ -12,10 +12,10 @@ export default function Orders({
   filter = "",
   setFilter = () => {}
 }) {
- const total = selectedProducts.reduce(
-  (acc, p) => acc + Number(p.price || 0) * Number(p.quantity || 1),
-  0
-);
+  const total = selectedProducts.reduce(
+    (acc, p) => acc + Number(p.price || 0) * Number(p.quantity || 1),
+    0
+  );
 
   const filteredOrders = orders.filter(o =>
     (o.client || "").toLowerCase().includes((filter || "").toLowerCase())
@@ -65,20 +65,41 @@ export default function Orders({
         onChange={(e) => setFilter(e.target.value)}
       />
 
-      <ul>
+      <div style={{ display: "grid", gap: 15, marginTop: 15 }}>
         {filteredOrders.map(o => (
-          <li key={o.id}>
-            {o.client} - ${Number(o.total).toFixed(2)} -{" "}
-            {o.status === "pending" ? "Pendiente" : "Entregado"}
+          <div
+            key={o.id}
+            style={{
+              border: "1px solid #ddd",
+              borderRadius: 10,
+              padding: 15,
+              background: "#fff",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
+            }}
+          >
+            <h3>{o.client}</h3>
+
+            <p>
+              💰 ${Number(o.total).toFixed(2)} |{" "}
+              {o.status === "pending" ? "🟡 Pendiente" : "🟢 Entregado"}
+            </p>
+
+            <div>
+              {o.products?.map(p => (
+                <div key={p.id}>
+                  {p.name} x{p.quantity} (${p.price})
+                </div>
+              ))}
+            </div>
 
             {o.status === "pending" && (
               <button onClick={() => deliverOrder(o.id)}>
-                Entregar
+                🚚 Entregar
               </button>
             )}
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
