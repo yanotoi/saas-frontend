@@ -119,57 +119,62 @@ function App() {
 
   // 🔥 CREAR PEDIDO REAL + UI INSTANTÁNEA
   const createOrder = async () => {
-    if (!clientName || selectedProducts.length === 0) return;
+  if (!clientName || selectedProducts.length === 0) return;
 
-    try {
-      const res = await apiCreateOrder({
-        client_name: clientName,
-        items: selectedProducts.map(p => ({
-          id: p.id,
-          price: Number(p.price),
-          quantity: Number(p.quantity)
-        }))
-      });
+  try {
+    const res = await apiCreateOrder({
+      client_name: clientName,
+      items: selectedProducts.map(p => ({
+        id: p.id,
+        price: Number(p.price),
+        quantity: Number(p.quantity || 1)
+      }))
+    });
 
-      // 🔥 agregamos instantáneamente el pedido
-      setOrders(prev => [
-        {
-          ...res,
-          client: clientName,
-          total: Number(res.total),
-          status: "pending"
-        },
-        ...prev
-      ]);
+    // 🔥 SI backend falla, no rompe UI
+    const total = Number(res?.total || 0);
 
-      await loadProducts();
+    setOrders(prev => [
+      {
+        id: res.id,
+        client: clientName,
+        total,
+        status: "pending"
+      },
+      ...prev
+    ]);
 
-      setSelectedProducts([]);
-      setClientName("");
-    } catch (err) {
-      console.error(err);
-      alert("Error al crear pedido");
-    }
-  };
+    await loadProducts();
+
+    setSelectedProducts([]);
+    setClientName("");
+
+  } catch (err) {
+    console.error(err);
+    alert("Error al crear pedido");
+  }
+};
 
   // 🔥 ENTREGAR PEDIDO + UPDATE INSTANTÁNEO
   const deliverOrder = async (id) => {
-    try {
-      await apiDeliverOrder(id);
+  try {
+    await apiDeliverOrder(id);
 
-      // 🔥 update inmediato sin esperar fetch
-      setOrders(prev =>
-        prev.map(o =>
-          o.id === id ? { ...o, status: "delivered" } : o
-        )
-      );
+    // 🔥 UPDATE INMEDIATO
+    setOrders(prev =>
+      prev.map(o =>
+        o.id === id ? { ...o, status: "delivered" } : o
+      )
+    );
 
-      await loadProducts();
-    } catch (err) {
-      console.error(err);
-      alert("Error al entregar pedido");
-    }
-  };
+    // 🔥 sincroniza stock y evita desfasajes
+    await loadProducts();
+
+  } catch (err) {
+    console.error(err);
+    alert("Error al entregar pedido");
+  }
+};
 
   if (!user) return <Login onLogin={setUser} />;
 

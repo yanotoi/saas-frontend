@@ -12,10 +12,10 @@ export default function Orders({
   filter = "",
   setFilter = () => {}
 }) {
-  const total = selectedProducts.reduce(
-    (acc, p) => acc + Number(p.price) * Number(p.quantity),
-    0
-  );
+ const total = selectedProducts.reduce(
+  (acc, p) => acc + Number(p.price || 0) * Number(p.quantity || 1),
+  0
+);
 
   const filteredOrders = orders.filter(o =>
     (o.client || "").toLowerCase().includes((filter || "").toLowerCase())
