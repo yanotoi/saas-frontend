@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState, useEffect } from "react";
 
 export default function Orders({
   orders = [],
@@ -18,10 +18,53 @@ export default function Orders({
   stats = { total_sales: 0, total_orders: 0 },
   closeCash = () => {}
 }) {
+
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [justCreated, setJustCreated] = useState(false);
+
+  // 🔥 detectar cliente nuevo
+  useEffect(() => {
+    if (!clientName) return;
+
+    const exists = clients.some(
+      c => c.name.toLowerCase() === clientName.toLowerCase()
+    );
+
+    if (!exists) {
+      setJustCreated(true);
+      setTimeout(() => setJustCreated(false), 2000);
+    }
+  }, [clientName, clients]);
+
   const total = selectedProducts.reduce(
     (acc, p) => acc + Number(p.price || 0) * Number(p.quantity || 1),
     0
   );
+
+  // ⭐ calcular frecuencia de clientes
+  const clientFrequency = useMemo(() => {
+    const map = {};
+    orders.forEach(o => {
+      map[o.client] = (map[o.client] || 0) + 1;
+    });
+    return map;
+  }, [orders]);
+
+  // 🔥 autocompletar inteligente
+  const suggestions = useMemo(() => {
+    if (!clientName) return [];
+
+    return clients
+      .filter(c =>
+        c.name.toLowerCase().includes(clientName.toLowerCase())
+      )
+      .sort((a, b) => {
+        const freqA = clientFrequency[a.name] || 0;
+        const freqB = clientFrequency[b.name] || 0;
+        return freqB - freqA;
+      })
+      .slice(0, 5);
+  }, [clientName, clients, clientFrequency]);
 
   const filteredOrders = orders.filter(o =>
     (o.client || "").toLowerCase().includes((filter || "").toLowerCase())
@@ -33,19 +76,47 @@ export default function Orders({
       <div className="pos-cart">
         <h2>🧾 Pedido</h2>
 
-        <input
-          list="clients"
-          value={clientName}
-          onChange={(e) => setClientName(e.target.value)}
-          placeholder="Cliente"
-          className="pos-input"
-        />
+        {/* INPUT CLIENTE */}
+        <div style={{ position: "relative" }}>
+          <input
+            value={clientName}
+            onChange={(e) => {
+              setClientName(e.target.value);
+              setShowSuggestions(true);
+            }}
+            onFocus={() => setShowSuggestions(true)}
+            placeholder="Cliente"
+            className="pos-input"
+          />
 
-        <datalist id="clients">
-          {clients.map(c => (
-            <option key={c.id} value={c.name} />
-          ))}
-        </datalist>
+          {/* 🔥 SUGERENCIAS */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="pos-suggestions">
+              {suggestions.map(c => (
+                <div
+                  key={c.id}
+                  className="pos-suggestion-item"
+                  onClick={() => {
+                    setClientName(c.name);
+                    setShowSuggestions(false);
+                  }}
+                >
+                  {c.name}
+                  {clientFrequency[c.name] > 2 && (
+                    <span className="badge">⭐ Frecuente</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ✅ FEEDBACK CLIENTE NUEVO */}
+          {justCreated && (
+            <div className="pos-new-client">
+              ✅ Cliente nuevo
+            </div>
+          )}
+        </div>
 
         <div className="pos-items">
           {selectedProducts.map(p => (
@@ -70,7 +141,7 @@ export default function Orders({
         </button>
       </div>
 
-      {/* CAJA ORIGINAL (NO TOCADA) */}
+      {/* CAJA ORIGINAL */}
       <div style={{ marginBottom: 20 }}>
         <h3>💰 Caja del día</h3>
         <div>
@@ -95,7 +166,6 @@ export default function Orders({
 
       <hr />
 
-      {/* TODO TU SISTEMA DE PEDIDOS QUEDA IGUAL */}
       <h2>🚚 Pedidos</h2>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 15 }}>
@@ -118,17 +188,16 @@ export default function Orders({
 
       <div style={{ display: "grid", gap: 15, marginTop: 15 }}>
         {filteredOrders.map(o => (
-          <div
-            key={o.id}
-            style={{
-              border: "1px solid #ddd",
-              borderRadius: 10,
-              padding: 15,
-              background: "#fff",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
-            }}
-          >
-            <h3>{o.client}</h3>
+          <div key={o.id} style={{
+            border: "1px solid #ddd",
+            borderRadius: 10,
+            padding: 15,
+            background: "#fff"
+          }}>
+            <h3>
+              {o.client}
+              {(clientFrequency[o.client] || 0) > 2 && " ⭐"}
+            </h3>
 
             <p>
               💰 ${Number(o.total).toFixed(2)} |{" "}

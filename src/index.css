@@ -174,3 +174,40 @@ code {
   border-radius: 10px;
   margin-top: 10px;
 }
+
+.pos-suggestions {
+  position: absolute;
+  top: 45px;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+.pos-suggestion-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.pos-suggestion-item:hover {
+  background: #f5f5f5;
+}
+
+.badge {
+  margin-left: 10px;
+  font-size: 12px;
+  color: gold;
+}
+
+.pos-new-client {
+  position: absolute;
+  top: -20px;
+  right: 0;
+  background: #16a34a;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}

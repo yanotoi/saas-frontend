@@ -172,42 +172,50 @@ function App() {
   };
 
   const createOrder = async () => {
-    if (!clientName || selectedProducts.length === 0) return;
+  if (!clientName || selectedProducts.length === 0) return;
 
-    try {
-      const res = await apiCreateOrder({
-        client_name: clientName,
-        items: selectedProducts.map(p => ({
-          id: p.id,
-          price: Number(p.price),
-          quantity: Number(p.quantity || 1)
-        }))
-      });
+  try {
+    const existingClient = clients.find(
+      c => c.name.toLowerCase() === clientName.toLowerCase()
+    );
 
-      const newOrder = {
-        id: res.id,
-        client: clientName,
-        total: Number(res.total),
-        status: "pending",
-        products: selectedProducts
-      };
+    const res = await apiCreateOrder({
+      client_name: clientName,
+      items: selectedProducts.map(p => ({
+        id: p.id,
+        price: Number(p.price),
+        quantity: Number(p.quantity || 1)
+      }))
+    });
 
-      setOrders(prev => [newOrder, ...prev]);
+    const newOrder = {
+      id: res.id,
+      client: clientName,
+      total: Number(res.total),
+      status: "pending",
+      products: selectedProducts
+    };
 
-      // 🔥 IMPRIME AUTOMÁTICO
-      printTicket(newOrder, selectedProducts);
+    setOrders(prev => [newOrder, ...prev]);
 
-      await loadProducts();
-      await loadStats();
-
-      setSelectedProducts([]);
-      setClientName("");
-
-    } catch (err) {
-      console.error(err);
-      alert("Error al crear pedido");
+    // 🔥 si es nuevo cliente → refresca lista
+    if (!existingClient) {
+      await loadClients();
     }
-  };
+
+    printTicket(newOrder, selectedProducts);
+
+    await loadProducts();
+    await loadStats();
+
+    setSelectedProducts([]);
+    setClientName("");
+
+  } catch (err) {
+    console.error(err);
+    alert("Error al crear pedido");
+  }
+};
 
   const deliverOrder = async (id) => {
     try {
