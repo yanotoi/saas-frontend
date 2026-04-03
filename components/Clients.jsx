@@ -7,11 +7,19 @@ export default function Clients({ clients = [], setClients, user }) {
   const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState("");
 
-  const getAuthHeaders = () => ({
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${user?.token}`,
-  });
+  // 🔐 HEADERS SEGUROS
+  const getAuthHeaders = () => {
+    if (!user?.token) return {};
 
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${user.token}`,
+    };
+  };
+
+  // ==========================
+  // ➕ AGREGAR CLIENTE
+  // ==========================
   const addClient = async () => {
     if (!newClient.trim()) return alert("Ingresá un nombre");
 
@@ -19,11 +27,19 @@ export default function Clients({ clients = [], setClients, user }) {
       const res = await fetch(`${API}/clients`, {
         method: "POST",
         headers: getAuthHeaders(),
-        body: JSON.stringify({ name: newClient, user_id: user.id }),
+        body: JSON.stringify({ name: newClient, user_id: user?.id }),
       });
+
+      if (res.status === 401) {
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return;
+      }
+
       const created = await res.json();
 
-      // actualizar de forma funcional para evitar cierres de estado
+      if (!created) return;
+
       setClients(prev => [...prev, created]);
       setNewClient("");
     } catch (err) {
@@ -32,6 +48,9 @@ export default function Clients({ clients = [], setClients, user }) {
     }
   };
 
+  // ==========================
+  // ✏️ EDITAR
+  // ==========================
   const editClient = (client) => {
     setEditingId(client.id);
     setEditingName(client.name);
@@ -41,15 +60,22 @@ export default function Clients({ clients = [], setClients, user }) {
     if (!editingName.trim()) return alert("El nombre no puede estar vacío");
 
     try {
-      await fetch(`${API}/clients/${id}`, {
+      const res = await fetch(`${API}/clients/${id}`, {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify({ name: editingName }),
       });
 
+      if (res.status === 401) {
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return;
+      }
+
       setClients(prev =>
         prev.map(c => (c.id === id ? { ...c, name: editingName } : c))
       );
+
       setEditingId(null);
       setEditingName("");
     } catch (err) {
@@ -58,14 +84,23 @@ export default function Clients({ clients = [], setClients, user }) {
     }
   };
 
+  // ==========================
+  // 🗑️ ELIMINAR
+  // ==========================
   const deleteClient = async (id) => {
     if (!confirm("¿Eliminar cliente?")) return;
 
     try {
-      await fetch(`${API}/clients/${id}`, {
+      const res = await fetch(`${API}/clients/${id}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
+
+      if (res.status === 401) {
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return;
+      }
 
       setClients(prev => prev.filter(c => c.id !== id));
     } catch (err) {
@@ -78,6 +113,7 @@ export default function Clients({ clients = [], setClients, user }) {
     <div>
       <h2>👤 Clientes</h2>
 
+      {/* ➕ NUEVO CLIENTE */}
       <input
         placeholder="Nuevo cliente"
         value={newClient}
@@ -85,15 +121,18 @@ export default function Clients({ clients = [], setClients, user }) {
       />
       <button onClick={addClient}>Agregar</button>
 
+      {/* 📋 LISTA */}
       <ul>
         {clients.map((c) => (
           <li key={c.id}>
+            {/* MODO NORMAL */}
             <span style={{ display: editingId === c.id ? "none" : "inline" }}>
               {c.name}{" "}
               <button onClick={() => editClient(c)}>Editar</button>
               <button onClick={() => deleteClient(c.id)}>Eliminar</button>
             </span>
 
+            {/* MODO EDICIÓN */}
             {editingId === c.id && (
               <>
                 <input

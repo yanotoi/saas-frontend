@@ -1,6 +1,8 @@
 export const API = "https://web-production-6e9f.up.railway.app";
 
-// helper para headers con token
+// ==========================
+// 🔐 AUTH HEADER
+// ==========================
 const authHeader = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   return user?.token
@@ -9,21 +11,54 @@ const authHeader = () => {
 };
 
 // ==========================
+// 🔥 MANEJO GLOBAL DE RESPUESTA
+// ==========================
+const handleResponse = async (res) => {
+  if (res.status === 401) {
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+    return null;
+  }
+
+  const data = await res.json();
+  return data;
+};
+
+// ==========================
 // AUTH
 // ==========================
-export const loginUser = (email, password) =>
-  fetch(`${API}/auth/login`, {
+export const loginUser = async (email, password) => {
+  const res = await fetch(`${API}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
-  }).then(res => res.json());
+  });
 
-export const registerUser = (email, password) =>
-  fetch(`${API}/auth/register`, {
+  const data = await res.json();
+
+  // 🔥 GUARDAR SESIÓN
+  if (data?.token) {
+    localStorage.setItem("user", JSON.stringify(data));
+  }
+
+  return data;
+};
+
+export const registerUser = async (email, password) => {
+  const res = await fetch(`${API}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
-  }).then(res => res.json());
+  });
+
+  const data = await res.json();
+
+  if (data?.token) {
+    localStorage.setItem("user", JSON.stringify(data));
+  }
+
+  return data;
+};
 
 // ==========================
 // GET
@@ -31,7 +66,7 @@ export const registerUser = (email, password) =>
 export const fetchProducts = () =>
   fetch(`${API}/products`, {
     headers: authHeader(),
-  }).then(res => res.json());
+  }).then(handleResponse);
 
 export const fetchOrders = ({ status, date }) => {
   const params = new URLSearchParams();
@@ -41,27 +76,27 @@ export const fetchOrders = ({ status, date }) => {
 
   return fetch(`${API}/orders?${params.toString()}`, {
     headers: authHeader(),
-  }).then(res => res.json());
+  }).then(handleResponse);
 };
 
 export const fetchClients = () =>
   fetch(`${API}/clients`, {
     headers: authHeader(),
-  }).then(res => res.json());
+  }).then(handleResponse);
 
 export const fetchStats = () =>
   fetch(`${API}/orders/stats`, {
     headers: authHeader(),
-  }).then(res => res.json());
+  }).then(handleResponse);
 
 // ==========================
-// 🔥 NUEVO → CERRAR CAJA
+// CAJA
 // ==========================
 export const closeCash = () =>
   fetch(`${API}/orders/close-cash`, {
     method: "POST",
     headers: authHeader(),
-  }).then(res => res.json());
+  }).then(handleResponse);
 
 // ==========================
 // POST / PUT
@@ -74,7 +109,7 @@ export const createProduct = (data) =>
       ...authHeader(),
     },
     body: JSON.stringify(data),
-  }).then(res => res.json());
+  }).then(handleResponse);
 
 export const createOrder = (data) =>
   fetch(`${API}/orders`, {
@@ -84,10 +119,10 @@ export const createOrder = (data) =>
       ...authHeader(),
     },
     body: JSON.stringify(data),
-  }).then(res => res.json());
+  }).then(handleResponse);
 
 export const deliverOrder = (id) =>
   fetch(`${API}/orders/${id}/deliver`, {
     method: "PUT",
     headers: authHeader(),
-  }).then(res => res.json());
+  }).then(handleResponse);
