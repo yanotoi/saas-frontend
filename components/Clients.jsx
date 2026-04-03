@@ -18,6 +18,14 @@ export default function Clients({ clients = [], setClients, user }) {
   };
 
   // ==========================
+  // 🔥 MANEJO 401 GLOBAL
+  // ==========================
+  const handleUnauthorized = () => {
+    localStorage.removeItem("user");
+    window.location.reload(); // 🔥 CLAVE (NO /login)
+  };
+
+  // ==========================
   // ➕ AGREGAR CLIENTE
   // ==========================
   const addClient = async () => {
@@ -30,14 +38,9 @@ export default function Clients({ clients = [], setClients, user }) {
         body: JSON.stringify({ name: newClient, user_id: user?.id }),
       });
 
-      if (res.status === 401) {
-        localStorage.removeItem("user");
-        window.location.href = "/login";
-        return;
-      }
+      if (res.status === 401) return handleUnauthorized();
 
       const created = await res.json();
-
       if (!created) return;
 
       setClients(prev => [...prev, created]);
@@ -66,11 +69,7 @@ export default function Clients({ clients = [], setClients, user }) {
         body: JSON.stringify({ name: editingName }),
       });
 
-      if (res.status === 401) {
-        localStorage.removeItem("user");
-        window.location.href = "/login";
-        return;
-      }
+      if (res.status === 401) return handleUnauthorized();
 
       setClients(prev =>
         prev.map(c => (c.id === id ? { ...c, name: editingName } : c))
@@ -96,11 +95,7 @@ export default function Clients({ clients = [], setClients, user }) {
         headers: getAuthHeaders(),
       });
 
-      if (res.status === 401) {
-        localStorage.removeItem("user");
-        window.location.href = "/login";
-        return;
-      }
+      if (res.status === 401) return handleUnauthorized();
 
       setClients(prev => prev.filter(c => c.id !== id));
     } catch (err) {
@@ -113,7 +108,6 @@ export default function Clients({ clients = [], setClients, user }) {
     <div>
       <h2>👤 Clientes</h2>
 
-      {/* ➕ NUEVO CLIENTE */}
       <input
         placeholder="Nuevo cliente"
         value={newClient}
@@ -121,18 +115,15 @@ export default function Clients({ clients = [], setClients, user }) {
       />
       <button onClick={addClient}>Agregar</button>
 
-      {/* 📋 LISTA */}
       <ul>
         {clients.map((c) => (
           <li key={c.id}>
-            {/* MODO NORMAL */}
             <span style={{ display: editingId === c.id ? "none" : "inline" }}>
               {c.name}{" "}
               <button onClick={() => editClient(c)}>Editar</button>
               <button onClick={() => deleteClient(c.id)}>Eliminar</button>
             </span>
 
-            {/* MODO EDICIÓN */}
             {editingId === c.id && (
               <>
                 <input

@@ -14,11 +14,14 @@ const authHeader = () => {
 // 🔥 MANEJO GLOBAL DE RESPUESTA
 // ==========================
 const handleResponse = async (res) => {
-  if (res.status === 401) {
-    localStorage.removeItem("user");
-    window.location.href = "/login";
-    return null;
-  }
+ if (res.status === 401) {
+  localStorage.removeItem("user");
+
+  // 🔥 recarga la app → vuelve a Login automáticamente
+  window.location.reload();
+
+  return null;
+}
 
   const data = await res.json();
   return data;
